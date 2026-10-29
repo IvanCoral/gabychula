@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Para mi amor Gaby</title>
+    <style>
+        /* Variables y ajustes generales */
+        :root {
+            --bg-color: #ff4d6d;
+            --envelope-red: #c1121f;
+            --envelope-dark: #780000;
+            --envelope-light: #e63946;
+            --paper-color: #fff9f0;
+            --text-color: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: radial-gradient(circle at center, #ff758c 0%, #c1121f 100%);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        /* Corazones flotantes del fondo */
+        .bg-heart {
+            position: absolute;
+            color: rgba(255, 255, 255, 0.2);
+            font-size: 2rem;
+            animation: floatUp 8s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(100vh) scale(0.5); opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { transform: translateY(-20vh) scale(1.5); opacity: 0; }
+        }
+
+        /* Texto de instrucción */
+        .instruction {
+            position: absolute;
+            top: 20%;
+            width: 100%;
+            text-align: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            z-index: 5;
+            animation: pulse 1.5s infinite;
+            transition: opacity 0.5s ease;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        /* Contenedor del sobre */
+        .envelope-wrapper {
+            position: relative;
+            width: 320px;
+            height: 220px;
+            cursor: pointer;
+            z-index: 10;
+            transition: transform 0.3s ease;
+        }
+        
+        .envelope-wrapper:hover {
+            transform: scale(1.02);
+        }
+
+        /* Partes del sobre */
+        .envelope-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-color: var(--envelope-dark);
+            border-radius: 5px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .envelope-front {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-left: 160px solid var(--envelope-light);
+            border-right: 160px solid var(--envelope-light);
+            border-bottom: 110px solid var(--envelope-red);
+            border-top: 110px solid transparent;
+            box-sizing: border-box;
+            border-radius: 5px;
+            z-index: 30;
+            pointer-events: none;
+        }
+
+        .envelope-flap {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 0;
+            border-left: 160px solid transparent;
+            border-right: 160px solid transparent;
+            border-top: 130px solid var(--envelope-red);
+            z-index: 40;
+            transform-origin: top;
+            transition: transform 0.6s ease-in-out, z-index 0.2s;
+            filter: drop-shadow(0 5px 5px rgba(0,0,0,0.2));
+        }
+
+        .heart-seal {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 3.5rem;
+            color: white;
+            z-index: 45;
+            transition: opacity 0.3s;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        /* Carta (Vista preliminar dentro del sobre) */
+        .letter-preview {
+            position: absolute;
+            bottom: 10px;
+            left: 15px;
+            right: 15px;
+            height: 190px;
+            background: var(--paper-color);
+            border-radius: 8px;
+            z-index: 20;
+            transition: transform 1s ease-in-out 0.6s; /* Se mueve después de que abre la solapa */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .letter-preview h2 {
+            margin: 0;
+            font-size: 1.2rem;
+            color: var(--envelope-red);
+            font-family: 'Georgia', serif;
+            text-align: center;
+        }
+
+        .letter-preview .lines {
+            width: 100%;
+            height: 2px;
+            background: rgba(0,0,0,0.1);
+            margin-top: 20px;
+            box-shadow: 0 15px 0 rgba(0,0,0,0.1), 0 30px 0 rgba(0,0,0,0.1);
+        }
+
+        /* Animaciones de apertura */
+        .envelope-wrapper.open .envelope-flap {
+            transform: rotateX(180deg);
+            z-index: 15; /* Se va detrás de la carta al abrir */
+        }
+        
+        .envelope-wrapper.open .heart-seal {
+            opacity: 0;
+        }
+
+        .envelope-wrapper.open .letter-preview {
+            transform: translateY(-160px);
+        }
+
+        /* Modal / Vista de pantalla completa de la carta */
+        .letter-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.8s ease-in-out;
+        }
+
+        .letter-modal.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .letter-content-full {
+            background: var(--paper-color);
+            width: 90%;
+            max-width: 600px;
+            max-height: 85vh;
+            border-radius: 15px;
+            padding: 30px 25px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            position: relative;
+            transform: translateY(50px) scale(0.9);
+            transition: transform 0.8s ease-in-out;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        .letter-modal.show .letter-content-full {
+            transform: translateY(0) scale(1);
+        }
+
+        /* Estilos del texto de la carta final */
+        .letter-content-full h1 {
+            color: var(--envelope-red);
+            font-size: 1.8rem;
+            text-align: center;
+            margin-top: 0;
+            font-family: 'Georgia', serif;
+        }
+
+        .letter-content-full p.message {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-color);
+            text-align: justify;
+            margin-bottom: 20px;
+        }
+
+        .letter-content-full p.signature {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: var(--envelope-red);
+            text-align: right;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        /* Sección de galería */
+        .gallery-container {
+            border-top: 2px dashed rgba(193, 18, 31, 0.3);
+            padding-top: 20px;
+            text-align: center;
+        }
+
+        .gallery-container p {
+            font-size: 1.05rem;
+            color: #555;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .photo-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        /* Estilo polaroid */
+        .polaroid {
+            background: white;
+            padding: 10px 10px 20px 10px;
+            border-radius: 4px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        
+        .polaroid:hover {
+            transform: scale(1.05) rotate(-2deg);
+        }
+
+        .polaroid img {
+            width: 130px;
+            height: 130px;
+            object-fit: cover;
+            border-radius: 2px;
+        }
+
+        /* Botón de cerrar (Opcional, por si quieren volver a ver el sobre) */
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #888;
+            cursor: pointer;
+        }
+
+        /* Ajustes para móviles */
+        @media (max-width: 400px) {
+            .polaroid img {
+                width: 100px;
+                height: 100px;
+            }
+            .envelope-wrapper {
+                transform: scale(0.9);
+            }
+            .envelope-wrapper:hover {
+                transform: scale(0.9);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fondo de corazones -->
+    <div id="bg-container"></div>
+
+    <!-- Instrucción -->
+    <div class="instruction" id="instruction">Toca el corazón para abrir 💌</div>
+
+    <!-- Sobre interactivo -->
+    <div class="envelope-wrapper" id="envelope">
+        <div class="envelope-back"></div>
+        
+        <div class="letter-preview">
+            <h2>Para mi niña hermosa, Gaby ❤️</h2>
+            <div class="lines"></div>
+        </div>
+
+        <div class="envelope-front"></div>
+        <div class="envelope-flap"></div>
+        <div class="heart-seal">❤️</div>
+    </div>
+
+    <!-- Carta expandida (Modal) -->
+    <div class="letter-modal" id="letterModal">
+        <div class="letter-content-full">
+            <button class="close-btn" id="closeBtn">✖</button>
+            <h1>Para mi niña hermosa, Gaby ❤️</h1>
+            
+            <p class="message">
+                Te amo con toda mi vida, lo siento mucho por todo, discúlpame por no hacerte sentir lo mucho que te amo. Tú eres mi niña de mi vida y sé que tú también me amas mucho, lo siento. Te quiero hacer la niña más feliz porque me gusta mucho verte sonreír, te amo mucho mi vida no cambies y no te alejes de mí, te amo mucho.
+            </p>
+            
+            <p class="signature">De: Felipe</p>
+
+            <div class="gallery-container">
+                <p>Me encanta verte así de feliz y quiero que seas muy feliz conmigo. ✨</p>
+                <div class="photo-grid">
+                    <div class="polaroid">
+                        <img src="IMG_20250531_131820.heif" alt="Foto 1">
+                    </div>
+                    <div class="polaroid">
+                        <img src="Picsart_24-09-13_05-45-36-792.jpg" alt="Foto 2">
+                    </div>
+                    <div class="polaroid">
+                        <img src="FB_IMG_1753905589501.jpg" alt="Foto 3">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de animaciones -->
+    <script>
+        // 1. Generar corazones flotantes de fondo
+        const bgContainer = document.getElementById('bg-container');
+        function createHeart() {
+            const heart = document.createElement('div');
+            heart.classList.add('bg-heart');
+            heart.innerText = '❤️';
+            heart.style.left = Math.random() * 100 + 'vw';
+            heart.style.animationDuration = (Math.random() * 3 + 5) + 's';
+            heart.style.fontSize = (Math.random() * 1.5 + 1) + 'rem';
+            bgContainer.appendChild(heart);
+
+            setTimeout(() => {
+                heart.remove();
+            }, 8000);
+        }
+        setInterval(createHeart, 600);
+
+        // 2. Lógica de apertura del sobre
+        const envelope = document.getElementById('envelope');
+        const instruction = document.getElementById('instruction');
+        const letterModal = document.getElementById('letterModal');
+        const closeBtn = document.getElementById('closeBtn');
+
+        envelope.addEventListener('click', () => {
+            if (!envelope.classList.contains('open')) {
+                // Abre el sobre
+                envelope.classList.add('open');
+                // Oculta el texto de instrucción
+                instruction.style.opacity = '0';
+                
+                // Espera a que termine la animación de la solapa (0.6s) y el deslizamiento de la carta (1s)
+                // Total: ~1.6 segundos antes de mostrar la carta en grande
+                setTimeout(() => {
+                    letterModal.classList.add('show');
+                }, 1800); 
+            }
+        });
+
+        // 3. Opción para cerrar la carta y volver al sobre abierto
+        closeBtn.addEventListener('click', () => {
+            letterModal.classList.remove('show');
+            // Si quieres que el sobre se cierre al cerrar la carta, descomenta la siguiente línea:
+            // envelope.classList.remove('open'); instruction.style.opacity = '1';
+        });
+    </script>
+</body>
+</html>
